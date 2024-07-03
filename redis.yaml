@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redis
+spec:
+  replicas: 2
+  selector:
+    app: redis
+  template:
+    metadata:
+      name: redis
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: registry.k8s.io/redis:e2e
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          envFrom:
+            - configMapRef:
+                name: env-config
+          env:
+            - name: PGSSLMODE
+              value: disable
+          ports:
+            - containerPort: 6379
+  
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379  
+    targetPort: 6379

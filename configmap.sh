@@ -1,0 +1,1 @@
+kubectl create configmap env-config --from-file=env-files/

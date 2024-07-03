@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outline
+spec:
+  replicas: 1 # no fix
+  selector:
+    matchLabels:
+      app: outline
+  template:
+    metadata:
+      labels:
+        app: outline
+    spec:
+      containers:
+      - name: outline
+        image: docker.getoutline.com/outlinewiki/outline:latest
+        envFrom:
+            - configMapRef:
+                name: env-config
+        env:
+            - name: POSTGRES_HOST
+              value: postgresql
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: user
+            - name: POSTGRES_PASSWORD
+              value: pass
+            - name: POSTGRES_DB
+              value: outline
+            - name: SECRET_KEY
+              value: 73aa429e81d70a690b44b3822747338cf217ca3f4b7475c46c9bf00a59546446
+            - name: UTILS_SECRET
+              value: e2ad2844455bc32c0d97b6e25ff14238234fbb92322b41351859c574e87fd9db
+            - name: DATABASE_URL
+              value: postgres://user:pass@postgres:5432/outline
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: PGSSLMODE
+              value: disable
+            - name: NODE_ENV
+              value: production
+            - name: FORCE_HTTPS
+              value: "false"
+            - name: MINIO_ROOT_USER
+              value: minio
+            - name: MINIO_ROOT_PASSWORD
+              value: miniostorage
+            - name: MINIO_ENDPOINT
+              value: http://localhost:9000
+            - name: RATE_LIMITER_REQUESTS
+              value: "1000"
+            - name: RATE_LIMITER_DURATION_WINDOW
+              value: "60"
+            - name: RATE_LIMITER_ENABLED
+              value: "true"
+            - name: "DEFAULT_LANGUAGE"
+              value: "en_US"
+
+            - name: URL
+              value: https://c464-113-161-68-88.ngrok-free.app
+              #value: http://localhost:32300
+            - name: AZURE_CLIENT_ID
+              value: d3eaccb9-59df-4517-bc30-2530e0b4f9a7
+            - name: AZURE_CLIENT_SECRET
+              value: KB-8Q~hemJ6Om29HpI8mrkGbe74-e27P_yvfVdeZ
+            - name: AZURE_RESOURCE_APP_ID
+              value: 00000003-0000-0000-c000-000000000000
+
+        command:
+            [
+              "sh",
+              "-c",
+              "yarn db:migrate --env=production-ssl-disabled && yarn start",
+            ]
+        resources: 
+        ports:
+        - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: outline
+spec:
+  type: NodePort
+  selector:
+    app: outline
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 32300
+
